@@ -1,0 +1,121 @@
+@baseUrl = http://localhost:3000
+
+########## REGISTER ##########
+
+### register creates a user (expect 201)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+    "username":"azlan",
+    "password":"secret123"
+}
+
+### register with missing password (expect 401)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+    "username":"azlan"
+}
+
+### register same username again (expect 409) - run after the first register
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+    "username":"azlan",
+    "password":"b"
+}
+
+########## LOGIN ##########
+
+### login with non existant user (expect 401)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "username":"ghost",
+    "password":"secret123"
+}
+
+### register loginuser
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+    "username":"loginuser",
+    "password":"secret123"
+}
+
+### login with existant user (expect 200 + token)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "username":"loginuser",
+    "password":"secret123"
+}
+
+### login with missing password (expect 400)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "username":"loginuser"
+}
+
+########## DEPOSIT ##########
+
+### register deposituser and save the token - run this before the valid jwt requests
+# @name depositUser
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+    "username":"deposituser",
+    "password":"secret123"
+}
+
+### deposit with no jwt (expect 401)
+POST {{baseUrl}}/userFunction/deposit
+Content-Type: application/json
+
+{
+    "amount":100
+}
+
+### deposit with invalid/corrupted jwt (expect 403)
+POST {{baseUrl}}/userFunction/deposit
+Authorization: not.a.realtoken
+Content-Type: application/json
+
+{
+    "amount":100
+}
+
+### deposit with no amount (expect 400)
+POST {{baseUrl}}/userFunction/deposit
+Authorization: {{depositUser.response.body.token}}
+Content-Type: application/json
+
+{}
+
+### deposit with negative amount (expect 400)
+POST {{baseUrl}}/userFunction/deposit
+Authorization: {{depositUser.response.body.token}}
+Content-Type: application/json
+
+{
+    "amount":-50
+}
+
+
+###deposit positive amount
+POST {{baseUrl}}/userFunction/deposit
+Authorization: {{depositUser.response.body.token}}
+Content-Type: application/json
+
+{
+    "amount":50
+}
